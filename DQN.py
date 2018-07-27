@@ -30,22 +30,37 @@ class DQN:
         session.run(init)
 
     def select_action(self, state):
+        """
+        Used for selection an action based on a given state
+        :param state: current state
+        :return: chosen action
+        """
         state = np.expand_dims(state, 0)
         pred = self.sess.run(self.output, feed_dict={self.inputs: state, self.temperature: self.temperature_c})[0]
         action = np.random.multinomial(1, pred)
         return action
 
+    """ NOT USED FOR NOW
     def predict(self, state):
         state = np.expand_dims(state, 0)
         pred = self.sess.run(self.output, feed_dict={self.inputs: state, self.temperature: self.temperature_c})
-        return pred
+        return pred"""
 
     def learn(self, state_batch, new_state_batch, reward_batch, action_batch, done_batch):
+        """
+        Used for training a model
+        :param state_batch: (state_size-long vector) batch of startint states
+        :param new_state_batch: (state_size-long vector) batch of ending states
+        :param reward_batch: (float) batch of rewards for an action
+        :param action_batch: (action_size-long one-hot vector) batch of played actions
+        :param done_batch: (boolean - mapped as True=0 False=1) batch of booleans indicating whether the scene has ended
+        :return:
+        """
         done_batch = tuple(map(lambda x: 0 if x else 1, done_batch))
         current_Q = np.max(self.sess.run(self.output, feed_dict={self.inputs: new_state_batch, self.temperature: self.temperature_c}), axis=1)
         current_Q = reward_batch + self.gamma * current_Q
         # current_Q = reward_batch + self.gamma * current_Q * done_batch
-        
+
         _, cost_value = self.sess.run([self.optimizer, self.loss], {self.inputs: state_batch,
                                                                     self.target_Q: current_Q,
                                                                     self.actions: action_batch,
